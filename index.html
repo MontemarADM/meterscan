@@ -147,6 +147,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus J
 .meter-inline-reading::placeholder{color:var(--muted);font-weight:400;font-size:.75rem}
 .meter-inline-unit{font-size:.65rem;font-weight:600;color:var(--muted);padding-right:6px;white-space:nowrap}
 .meter-cam-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.meter-dual-readings{display:flex;gap:5px;align-items:center;flex:1;min-width:0}
+.slot{display:flex;align-items:center;gap:4px;border:1.5px solid var(--border);border-radius:8px;padding:4px 7px;min-width:0;transition:border-color .16s;overflow:hidden}
+.slot-manual{flex:1;background:white}
+.slot-manual:focus-within{border-color:var(--accent)}
+.slot-foto{flex:1;background:var(--bg);border-style:dashed}
+.slot-foto.has-value{background:var(--accent-light);border-color:var(--accent);border-style:solid}
+.slot-lbl{font-size:.58rem;color:var(--muted);flex-shrink:0;line-height:1}
+.slot-unit{font-size:.6rem;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.slot-valor{font-family:'JetBrains Mono',monospace;font-size:.83rem;font-weight:600;color:var(--accent);white-space:nowrap;flex:1}
+.slot-valor.empty{color:var(--muted);font-weight:400;font-size:.72rem}
+.diff-badge{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.diff-ok{background:var(--success-light);color:var(--success)}
+.diff-warn{background:var(--warn-light);color:var(--warn)}
+.foto-compare-block{padding:10px 13px;border-top:1px solid var(--border-soft);background:var(--bg);border-radius:0 0 12px 12px}
+.foto-compare-title{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.foto-compare-row{display:flex;gap:8px;align-items:stretch}
+.compare-slot{flex:1;background:white;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px}
+.compare-slot.slot-ai{background:var(--accent-light);border-color:var(--accent)}
+.compare-slot-label{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.compare-slot-value{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent)}
+.compare-slot-unit{font-size:.65rem;color:var(--muted);margin-top:1px}
+.compare-diff{display:flex;align-items:center;justify-content:center;flex-direction:column;padding:6px 0;gap:2px}
+.compare-diff-label{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.compare-diff-value{font-size:.85rem;font-weight:700}
+.conf-high{background:#e3f7ef;color:#00a86b}
+.conf-med{background:#fff3cd;color:#e67e00}
+.conf-low{background:#fff1eb;color:#e8590c}
 .meter-cam-btn:hover{border-color:var(--accent);background:var(--accent-light)}
 .meter-del{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .meter-del:hover{background:var(--warn-light);color:var(--warn)}
@@ -717,7 +744,7 @@ function renderFloorContent() {
 }
 
 function makeMeter(num) {
-  return { id: Date.now()+Math.random(), number: `Medidor ${num}`, reading: '', unit: '', confidence: '', done: false, photoDataUrl: null };
+  return { id: Date.now()+Math.random(), number: `Medidor ${num}`, reading: '', lecturaFoto: '', unit: '', confidence: '', done: false, photoDataUrl: null };
 }
 
 function renderMetersList(floor) {
@@ -730,14 +757,33 @@ function renderMetersList(floor) {
         <div class="meter-num-badge">${idx+1}</div>
         <input class="meter-num-input" value="${m.number}" placeholder="N° medidor"
           onclick="event.stopPropagation()" onchange="updateMeterNumber(${idx},this.value)" />
-        <div class="meter-reading-wrap">
-          <input class="meter-inline-reading" type="number" inputmode="decimal"
-            value="${m.reading||''}" placeholder="Lectura"
-            onclick="event.stopPropagation()"
-            onchange="setManualReading(${idx},this.value)"
-            oninput="setManualReading(${idx},this.value)" />
-          <span class="meter-inline-unit">m³</span>
-        </div>
+        ${(()=>{
+          const hasFoto = !!m.lecturaFoto;
+          const hasBoth = hasFoto && m.reading !== '';
+          let diff = '';
+          if(hasBoth){
+            const d = Math.abs(parseFloat(m.lecturaFoto||0)-parseFloat(m.reading||0));
+            const cls = d < 1 ? 'diff-ok' : 'diff-warn';
+            diff = `<span class="diff-badge ${cls}">${d < 0.01 ? '= igual' : 'Δ '+d.toFixed(2)}</span>`;
+          }
+          return `<div class="meter-dual-readings">
+            <div class="slot slot-manual">
+              <span class="slot-lbl">✏</span>
+              <input class="meter-inline-reading" type="number" inputmode="decimal"
+                value="${m.reading||''}" placeholder="Manual"
+                onclick="event.stopPropagation()"
+                onchange="setManualReading(${idx},this.value)"
+                oninput="setManualReading(${idx},this.value)" />
+              <span class="slot-unit">m³</span>
+            </div>
+            <div class="slot slot-foto ${hasFoto?'has-value':''}">
+              <span class="slot-lbl">📷</span>
+              <span class="slot-valor ${hasFoto?'':'empty'}">${m.lecturaFoto||'—'}</span>
+              ${hasFoto?'<span class="slot-unit">m³</span>':''}
+              ${diff}
+            </div>
+          </div>`;
+        })()}
         <button class="meter-cam-btn" onclick="event.stopPropagation();toggleMeterDetail(${idx})" title="Foto">📷</button>
         <button class="meter-del" onclick="event.stopPropagation();deleteMeter(${idx})" title="Eliminar">✕</button>
       </div>
@@ -768,13 +814,32 @@ function renderMetersList(floor) {
           </label>
           ${m.photoDataUrl?`<button class="btn btn-secondary" style="flex:0.5" onclick="clearMeterPhoto(${idx})">✕</button>`:''}
         </div>
-        ${m.done?`<div class="reading-result">
-          <div class="reading-label">Lectura detectada</div>
-          <div class="reading-value-row">
-            <input class="reading-input" value="${m.reading}" onchange="updateMeterReading(${idx},this.value)"/>
-            <span class="reading-unit">${m.unit}</span>
-            <span class="confidence-badge conf-${m.confidence}">${m.confidence==='high'?'✓ Alta':m.confidence==='med'?'~ Media':'! Baja'}</span>
-          </div></div>`:''}
+        ${m.lecturaFoto ? `<div class="foto-compare-block">
+          <div class="foto-compare-title">📊 Comparación de lecturas</div>
+          <div class="foto-compare-row">
+            <div class="compare-slot">
+              <div class="compare-slot-label">✏ Manual</div>
+              <div class="compare-slot-value">${m.reading||'—'}</div>
+              <div class="compare-slot-unit">${m.reading ? 'm³' : 'sin lectura'}</div>
+            </div>
+            <div class="compare-diff">
+              ${(()=>{
+                if(m.reading && m.lecturaFoto){
+                  const d=Math.abs(parseFloat(m.lecturaFoto)-parseFloat(m.reading));
+                  const cls=d<1?'diff-ok':'diff-warn';
+                  return `<div class="compare-diff-label">Diferencia</div>
+                    <div class="compare-diff-value ${cls}">Δ ${d.toFixed(2)}</div>`;
+                }
+                return '<div class="compare-diff-label">vs</div>';
+              })()}
+            </div>
+            <div class="compare-slot slot-ai">
+              <div class="compare-slot-label">📷 Foto AI <span class="confidence-badge conf-${m.confidence}" style="margin-left:3px">${m.confidence==='high'?'✓':m.confidence==='med'?'~':'!'}</span></div>
+              <div class="compare-slot-value">${m.lecturaFoto}</div>
+              <div class="compare-slot-unit">m³</div>
+            </div>
+          </div>
+        </div>` : ''}
       </div>`;
     list.appendChild(row);
   });
@@ -799,8 +864,8 @@ function updateMeterNumber(idx,val) { currentFloors()[S.currentFloor].meters[idx
 function setManualReading(idx,val) {
   const floor = currentFloors()[S.currentFloor];
   const m = floor.meters[idx];
-  m.reading = val; m.unit = 'm³'; m.confidence = 'high';
-  m.done = val !== '' && val !== null && val !== undefined;
+  m.reading = val; m.unit = 'm³';
+  m.done = !!(val && val !== '') || !!m.lecturaFoto;
   checkFloorDone(floor);
   floor.lastSaved = new Date().toISOString();
   persistCondoSession(); updateSummary(); renderHistory(); renderFloorBar(); renderTowerBar();
@@ -816,10 +881,10 @@ function updateMeterReading(idx,val) {
 }
 function clearMeterPhoto(idx) {
   const floor=currentFloors()[S.currentFloor]; const m=floor.meters[idx];
-  m.photoDataUrl=null; m.done=false; m.reading='';
+  m.photoDataUrl=null; m.done=false; m.lecturaFoto=''; m.confidence='';
   checkFloorDone(floor); saveAndRender();
 }
-function checkFloorDone(floor) { floor.done = floor.meters.length>0 && floor.meters.every(m=>m.done); }
+function checkFloorDone(floor) { floor.meters.forEach(m=>{ m.done = !!(m.reading || m.lecturaFoto); }); floor.done = floor.meters.length>0 && floor.meters.every(m=>m.done); }
 function saveAndRender() { persistCondoSession(); renderFloorContent(); updateSummary(); renderHistory(); renderFloorBar(); renderTowerBar(); }
 
 // ─── PHOTO / AI ────────────────────────────────────────────────────────────
@@ -849,12 +914,23 @@ async function analyzePhoto(dataUrl,idx) {
   const meterNum=meter.number||`Medidor ${idx+1}`;
   const base64=dataUrl.split(',')[1];
   const mediaType=dataUrl.startsWith('data:image/png')?'image/png':'image/jpeg';
-  const prompt=`Eres un experto en lectura de medidores de servicios.
-Foto del medidor: "${meterNum}". Tipo: ${type}.
-Lee el visor y devuelve SOLO este JSON (sin backticks):
-{"reading":"12345","unit":"m³","confidence":"high","notes":""}
-- reading: dígitos del visor, sin espacios ni puntos extra. Si no puedes leer: "???"
-- unit: unidad adecuada para ${type}
+  const prompt=`Eres un experto en lectura de medidores de agua y servicios.
+
+Tu tarea: leer el VISOR NUMÉRICO PRINCIPAL (contador tipo odómetro).
+
+INSTRUCCIONES:
+1. Localiza el display rectangular con rodillos/dígitos individuales.
+2. Dígitos NEGROS o BLANCOS = parte entera (m³ completos).
+3. Dígitos ROJOS o en caja separada = decimales (fracción de m³).
+4. Ignora la ruleta giratoria, flechas de flujo y otros indicadores.
+5. Lee de izquierda a derecha, incluye decimales con punto.
+   Ejemplo display "0 0 0 3 . 0 5" → "3.05"
+
+Medidor: "${meterNum}". Tipo: ${type}.
+
+Responde SOLO con este JSON (sin markdown, sin backticks):
+{"reading":"3.05","unit":"m³","confidence":"high","notes":"negro:0003, rojo:05"}
+- reading: número completo incluyendo decimales. Si no puedes leer: "???"
 - confidence: "high","med" o "low"`;
   try {
     if(procText)procText.textContent='Leyendo medidor…';
@@ -868,7 +944,8 @@ Lee el visor y devuelve SOLO este JSON (sin backticks):
     const data=await resp.json();
     if(data.error)throw new Error(data.error.message);
     const result=JSON.parse(data.content.map(b=>b.text||'').join('').replace(/```json|```/gi,'').trim());
-    meter.reading=result.reading; meter.unit=result.unit; meter.confidence=result.confidence; meter.done=true;
+    meter.lecturaFoto=result.reading; meter.unit=result.unit; meter.confidence=result.confidence;
+    meter.done = !!(meter.reading || meter.lecturaFoto);
     checkFloorDone(floor); floor.lastSaved=new Date().toISOString();
     persistCondoSession();
     if(procEl)procEl.classList.remove('active');
@@ -1017,11 +1094,14 @@ async function gFetch(url,method,body){
 }
 function openSheets(){if(G.sheetsUrl)window.open(G.sheetsUrl,'_blank');}
 function collectAllData(){
-  const rows=[['Condominio','Torre','Piso','N° Medidor','Nombre Medidor','Lectura','Unidad','Confianza','Fecha']];
+  const rows=[['Condominio','Torre','Piso','N° Medidor','Nombre Medidor','Lectura Manual','Lectura Foto AI','Diferencia','Unidad','Confianza Foto','Fecha']];
   S.towers.forEach(tower=>{
     (S.towerData[tower]||[]).forEach(f=>{
       f.meters.forEach((m,mi)=>{
-        if(m.done||m.reading) rows.push([S.building.name,tower,f.label,mi+1,m.number,m.reading,m.unit,m.confidence,new Date().toLocaleString('es-CL')]);
+        if(m.reading||m.lecturaFoto){
+          const diff=(m.reading&&m.lecturaFoto)?Math.abs(parseFloat(m.lecturaFoto)-parseFloat(m.reading)).toFixed(2):'';
+          rows.push([S.building.name,tower,f.label,mi+1,m.number,m.reading||'',m.lecturaFoto||'',diff,m.unit||'m³',m.confidence||'',new Date().toLocaleString('es-CL')]);
+        }
       });
     });
   });
