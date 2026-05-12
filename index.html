@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MeterScan</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f4f8;--white:#fff;--surface2:#eaecf3;--border:#dde1ec;--border-soft:#e8eaf2;
+  --accent:#1a5cff;--accent-light:#e8eeff;--accent-dark:#1040cc;
+  --success:#00a86b;--success-light:#e3f7ef;
+  --warn:#e8590c;--warn-light:#fff1eb;
+
+  --sheets:#0f9d58;--sheets-light:#e3f7ee;
+  --text:#1a1d2e;--muted:#8a91ad;
+  --radius:16px;
+  --shadow:0 1px 3px rgba(26,29,46,.07),0 6px 18px rgba(26,29,46,.06);
+  --shadow-sm:0 1px 3px rgba(26,29,46,.09);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden}
+
+/* HOME */
+#homeScreen{display:block}
+#appScreen{display:none}
+.home-header{background:var(--white);border-bottom:1px solid var(--border-soft);padding:18px 18px 14px;box-shadow:0 1px 0 var(--border-soft)}
+.home-logo{font-weight:800;font-size:1.3rem;letter-spacing:-.5px;color:var(--text)}
+.home-logo span{color:var(--accent)}
+.home-logo small{display:block;font-size:.6rem;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:-2px}
+.home-logo-row{display:flex;align-items:center;justify-content:space-between}
+.home-google-btn{display:flex;align-items:center;gap:7px;background:var(--bg);border:1.5px solid var(--border);border-radius:100px;padding:6px 14px;font-size:.74rem;font-weight:700;color:var(--text);cursor:pointer;transition:all .16s}
+.home-google-btn:hover{border-color:var(--accent);color:var(--accent)}
+.home-google-btn.connected{background:var(--success-light);border-color:rgba(0,168,107,.25);color:var(--success)}
+.home-main{padding:18px;max-width:480px;margin:0 auto}
+.home-section-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.home-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CONDO CARDS */
+.condo-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:14px;position:relative}
+.condo-card:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light),var(--shadow)}
+.condo-icon{width:46px;height:46px;border-radius:12px;background:var(--accent-light);border:1.5px solid rgba(26,92,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.condo-info{flex:1;min-width:0}
+.condo-name{font-weight:800;font-size:.95rem;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.condo-meta{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.condo-progress{text-align:right;flex-shrink:0}
+.condo-pct{font-weight:800;font-size:1.1rem;color:var(--accent)}
+.condo-pct-label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.condo-bar{height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.condo-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.condo-bar-fill.complete{background:var(--success)}
+.condo-actions{display:flex;gap:6px;position:absolute;top:10px;right:10px;opacity:0;transition:opacity .16s}
+.condo-card:hover .condo-actions{opacity:1}
+.condo-action-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--white);font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s}
+.condo-action-btn:hover{background:var(--warn-light);border-color:var(--warn);color:var(--warn)}
+.btn-new-condo{width:100%;padding:14px;border-radius:var(--radius);border:2px dashed var(--border);background:transparent;color:var(--muted);font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.btn-new-condo:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.activity-item{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border-soft)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0}
+.activity-text{font-size:.8rem;color:var(--text);flex:1}
+.activity-time{font-size:.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.empty-state{text-align:center;padding:40px 20px}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.4}
+.empty-title{font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:.8rem;color:var(--muted);line-height:1.5}
+
+/* APP SCREEN */
+.header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 10px;border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:var(--white);z-index:100;box-shadow:0 1px 0 var(--border-soft);gap:8px}
+.header-left{display:flex;align-items:center;gap:10px}
+.back-btn{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .16s;color:var(--text);flex-shrink:0}
+.back-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.logo{font-weight:800;font-size:1rem;letter-spacing:-.5px;color:var(--text)}
+.logo span{color:var(--accent)}
+.logo small{display:block;font-size:.56rem;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:-2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+.badge-cfg{background:var(--surface2);border:1.5px solid var(--border);border-radius:100px;padding:5px 11px;font-size:.68rem;color:var(--muted);font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
+.badge-cfg:hover{background:var(--accent);color:white;border-color:var(--accent)}
+.badge-reset{background:var(--warn-light);border:1.5px solid rgba(232,89,12,.2);border-radius:100px;padding:5px 11px;font-size:.68rem;color:var(--warn);font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
+.badge-reset:hover{background:var(--warn);color:white;border-color:var(--warn)}
+
+.main{padding:13px;max-width:480px;margin:0 auto;padding-bottom:100px}
+
+/* PERIOD BAR */
+.period-bar{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:13px;padding:11px 14px;margin-bottom:13px;box-shadow:var(--shadow-sm)}
+.period-icon{font-size:1.1rem;flex-shrink:0}
+.period-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.period-selects{display:flex;gap:7px;flex:1}
+.period-select{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.84rem;font-weight:600;color:var(--text);outline:none;cursor:pointer;transition:border-color .16s}
+.period-select:focus{border-color:var(--accent)}
+.period-badge{background:var(--accent-light);color:var(--accent);font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+
+/* TOWER / FLOOR */
+.section-label-sm{font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.hscroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-bottom:12px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.tower-chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--white);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .16s;color:var(--muted);white-space:nowrap;box-shadow:var(--shadow-sm)}
+.tower-chip:hover{border-color:var(--accent);color:var(--accent)}
+.tower-chip.active{background:var(--text);border-color:var(--text);color:white}
+.tower-chip.done{border-color:var(--success);color:var(--success);background:var(--success-light)}
+.tower-chip.done::after{content:' ✓'}
+.floor-chip{flex-shrink:0;padding:7px 12px;border-radius:100px;border:1.5px solid var(--border);background:var(--white);font-family:'JetBrains Mono',monospace;font-size:.71rem;font-weight:500;cursor:pointer;transition:all .16s;color:var(--muted);white-space:nowrap;box-shadow:var(--shadow-sm)}
+.floor-chip:hover{border-color:var(--accent);color:var(--accent)}
+.floor-chip.active{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 2px 10px rgba(26,92,255,.25)}
+.floor-chip.done{border-color:var(--success);color:var(--success);background:var(--success-light)}
+.floor-chip.done::after{content:' ✓'}
+
+/* SUMMARY */
+.summary-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+.summary-chip{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:11px 8px;text-align:center;box-shadow:var(--shadow-sm)}
+.summary-num{font-weight:800;font-size:1.45rem;color:var(--accent);line-height:1;margin-bottom:3px}
+.summary-label{font-size:.61rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+
+/* PAUSED / SHEETS */
+
+.sheets-success{display:none;align-items:center;gap:12px;background:var(--sheets-light);border:1.5px solid rgba(15,157,88,.2);border-radius:13px;padding:12px 14px;margin-bottom:12px}
+.sheets-success.visible{display:flex}
+.sheets-success-info{flex:1}
+.sheets-success-title{font-weight:700;font-size:.83rem;color:var(--sheets);margin-bottom:2px}
+.sheets-success-link{font-size:.7rem;color:var(--sheets);text-decoration:underline;cursor:pointer;font-family:'JetBrains Mono',monospace}
+
+/* FLOOR CARD */
+.floor-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+.floor-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--border-soft);background:var(--bg)}
+.floor-card-title{font-weight:700;font-size:.88rem;color:var(--text)}
+.floor-card-meta{font-family:'JetBrains Mono',monospace;font-size:.67rem;color:var(--muted)}
+
+/* FLOOR 1 SETUP */
+.floor1-setup{background:var(--accent-light);border:1.5px solid rgba(26,92,255,.18);border-radius:13px;padding:14px;margin-bottom:13px}
+.floor1-setup-title{font-weight:800;font-size:.88rem;color:var(--accent);margin-bottom:4px}
+.floor1-setup-sub{font-size:.75rem;color:var(--muted);margin-bottom:12px;line-height:1.4}
+.floor1-qty-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.floor1-qty-label{font-size:.75rem;font-weight:700;color:var(--text);white-space:nowrap}
+.floor1-qty-input{width:70px;background:white;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;color:var(--accent);outline:none;text-align:center}
+.floor1-qty-input:focus{border-color:var(--accent)}
+.btn-gen-meters{flex:1;padding:8px 12px;border-radius:8px;background:var(--accent);color:white;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer}
+.floor1-meter-inputs{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.floor1-meter-row{display:flex;align-items:center;gap:8px}
+.floor1-meter-num{width:26px;height:26px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;color:white;flex-shrink:0}
+.floor1-meter-input{flex:1;background:white;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;color:var(--text);outline:none}
+.floor1-meter-input:focus{border-color:var(--accent)}
+.btn-save-meters{width:100%;padding:11px;border-radius:10px;background:var(--success);color:white;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.meters-saved-badge{display:flex;align-items:center;gap:8px;background:var(--success-light);border:1.5px solid rgba(0,168,107,.2);border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:.78rem;font-weight:600;color:var(--success)}
+.btn-edit-template{background:none;border:none;color:var(--accent);font-size:.73rem;font-weight:700;cursor:pointer;text-decoration:underline;margin-left:auto;font-family:'Plus Jakarta Sans',sans-serif}
+
+/* METERS SETUP */
+.meters-setup{padding:13px 14px}
+.meters-setup-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px}
+
+/* METER CARD */
+.meter-card{background:var(--white);border:1px solid var(--border);border-radius:13px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.meter-card-header{display:flex;align-items:center;gap:8px;padding:11px 14px;background:linear-gradient(135deg,var(--accent-light) 0%,#f0f4ff 100%);border-bottom:2px solid rgba(26,92,255,.12)}
+.meter-card-body{padding:11px 12px;display:flex;flex-direction:column;gap:10px}
+.meter-field-label{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.meter-num-badge{width:30px;height:30px;border-radius:8px;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;color:white;flex-shrink:0;box-shadow:0 2px 6px rgba(26,92,255,.3)}
+.meter-manual-wrap{display:flex;align-items:center;background:white;border:1.5px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color .16s}
+.meter-manual-wrap:focus-within{border-color:var(--accent)}
+.meter-manual-wrap.has-value{border-color:var(--success);background:var(--success-light)}
+.meter-manual-input{flex:1;border:none;outline:none;padding:9px 11px;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:var(--accent);background:transparent;-moz-appearance:textfield}
+.meter-manual-input::-webkit-outer-spin-button,.meter-manual-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.meter-manual-input::placeholder{color:var(--muted);font-weight:400;font-size:.8rem}
+.meter-manual-unit{font-size:.72rem;font-weight:600;color:var(--muted);padding:0 10px 0 4px;white-space:nowrap;flex-shrink:0}
+
+.meter-del{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.meter-del:hover{background:var(--warn-light);color:var(--warn)}
+.add-meter-btn{width:100%;padding:9px;border-radius:9px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .16s;margin-top:3px}
+.add-meter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+/* BACKUP PHOTOS */
+.backup-section{padding:14px;border-top:2px dashed var(--border);margin-top:4px}
+.backup-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.btn-backup{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:11px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .16s}
+.btn-backup:hover{background:var(--accent);color:white}
+.backup-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.backup-thumb{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;border:1.5px solid var(--border);background:var(--surface2)}
+.backup-thumb img{width:100%;height:100%;object-fit:cover;cursor:pointer;display:block}
+.backup-thumb-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(26,29,46,.7);border:none;color:white;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.backup-thumb-del:hover{background:var(--warn)}
+.backup-count{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:8px;text-align:center}
+.backup-actions{display:flex;gap:8px;margin-top:10px}
+input[type=file]{display:none}
+
+/* BTNS */
+.btn{flex:1;padding:10px 8px;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.79rem;cursor:pointer;border:none;transition:all .16s;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.btn-primary{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(26,92,255,.22)}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sheets{background:var(--sheets);color:white;box-shadow:0 2px 8px rgba(15,157,88,.2)}
+.btn-sheets:hover{background:#0b8a4c}
+
+/* ERROR */
+.error-card{background:var(--warn-light);border:1px solid rgba(232,89,12,.2);border-radius:11px;padding:10px 13px;margin-bottom:11px;font-size:.79rem;color:var(--warn);font-weight:500;display:none}
+.error-card.visible{display:block}
+
+/* HISTORY */
+.section-label{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.history-item{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .16s;box-shadow:var(--shadow-sm)}
+.history-item:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+.history-floor{width:32px;height:32px;border-radius:8px;background:var(--accent-light);border:1.5px solid rgba(26,92,255,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:var(--accent);flex-shrink:0}
+.history-info{flex:1}
+.history-name{font-size:.8rem;font-weight:600;margin-bottom:2px;color:var(--text)}
+.history-meta{font-size:.66rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.history-count{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--success);font-weight:500;background:var(--success-light);padding:3px 7px;border-radius:100px}
+
+/* EXPORT BAR */
+.export-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-top:1px solid var(--border);padding:9px 13px;display:none;box-shadow:0 -4px 20px rgba(26,29,46,.08)}
+.export-inner{max-width:480px;margin:0 auto;display:flex;gap:7px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,29,46,.4);backdrop-filter:blur(8px);z-index:500;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:16px 16px 32px;animation:slideUp .22s ease;box-shadow:0 -8px 40px rgba(26,29,46,.12);max-height:88vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:34px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.modal-title{font-weight:800;font-size:1rem;margin-bottom:13px;color:var(--text)}
+.form-row{margin-bottom:11px}
+.form-label{font-size:.7rem;color:var(--muted);margin-bottom:5px;display:block;font-weight:600}
+.form-input,.form-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.87rem;padding:10px 12px;outline:none;transition:border-color .16s;font-weight:500}
+.form-input:focus,.form-select:focus{border-color:var(--accent);background:white}
+.modal-actions{display:flex;gap:8px;margin-top:13px}
+.tower-row{display:flex;gap:7px;margin-bottom:7px;align-items:center}
+.tower-row .form-input{flex:1}
+.btn-icon{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .16s;flex-shrink:0;color:var(--muted)}
+.btn-icon:hover{border-color:var(--warn);color:var(--warn);background:var(--warn-light)}
+.btn-add-tower{width:100%;padding:8px;border-radius:9px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-size:.77rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .16s;margin-top:2px}
+.btn-add-tower:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.google-auth-section{background:var(--bg);border:1.5px solid var(--border);border-radius:11px;padding:12px;margin-top:5px}
+.google-auth-title{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.google-auth-sub{font-size:.69rem;color:var(--muted);margin-bottom:10px;line-height:1.4}
+.google-status{display:flex;align-items:center;gap:7px;font-size:.73rem;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:8px}
+.google-status.connected{background:var(--success-light);color:var(--success)}
+.btn-google{width:100%;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);color:var(--text);font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .16s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-google:hover{border-color:var(--accent);color:var(--accent)}
+.btn-google-disconnect{width:100%;padding:6px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-size:.7rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:underline;margin-top:3px}
+
+/* SPINNER */
+.g-spinner{position:fixed;inset:0;background:rgba(255,255,255,.9);backdrop-filter:blur(6px);z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.g-spinner.active{display:flex}
+.g-spinner-ring{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--sheets);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.g-spinner-text{font-weight:700;font-size:.84rem;color:var(--text)}
+
+/* TOAST */
+.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--text);color:white;font-size:.75rem;font-weight:600;padding:8px 16px;border-radius:100px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(26,29,46,.2)}
+.toast.success{background:var(--success)}
+.toast.warning{background:var(--warn)}
+.toast.info{background:var(--pause)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="homeScreen">
+  <div class="home-header">
+    <div class="home-logo-row">
+      <div class="home-logo">Meter<span>Scan</span><small>Registro Inteligente de Medidores</small></div>
+      <button class="home-google-btn" id="homeGoogleBtn" onclick="handleGoogleAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span id="homeGoogleLabel">Conectar Google</span>
+      </button>
+    </div>
+  </div>
+  <div class="home-main">
+    <div style="height:16px"></div>
+    <div class="home-section-title">Mis Condominios</div>
+    <div id="condoList"></div>
+    <button class="btn-new-condo" onclick="newCondo()">＋ Agregar Condominio</button>
+    <div style="height:20px"></div>
+    <div class="home-section-title">Actividad Reciente</div>
+    <div id="activityList"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <div class="logo">Meter<span>Scan</span><small id="appCondoLabel">—</small></div>
+    </div>
+    <div class="header-right">
+      <div class="badge-reset" onclick="resetReadings()" title="Resetear lecturas">↺ Reset</div>
+      <div class="badge-cfg" onclick="openModal()">⚙</div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="sheets-success" id="sheetsSuccess">
+      <div style="font-size:1.3rem;flex-shrink:0">📊</div>
+      <div class="sheets-success-info">
+        <div class="sheets-success-title">¡Exportado a Google Sheets!</div>
+        <div class="sheets-success-link" id="sheetsLink" onclick="openSheets()">Abrir →</div>
+      </div>
+    </div>
+
+    <!-- Period -->
+    <div class="period-bar" id="periodBar" style="display:none">
+      <div class="period-icon">📅</div>
+      <div style="flex:1">
+        <div class="period-label">Período de registro</div>
+        <div class="period-selects">
+          <select class="period-select" id="periodMonth" onchange="savePeriod()">
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+            <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+          <select class="period-select" id="periodYear" onchange="savePeriod()"></select>
+        </div>
+      </div>
+      <div class="period-badge" id="periodBadge">—</div>
+    </div>
+
+    <!-- Tower / Floor -->
+    <div id="towerSection" style="display:none">
+      <div class="section-label-sm">🏢 Torre / Bloque</div>
+      <div class="hscroll" id="towerBar"></div>
+    </div>
+    <div class="summary-strip" id="summaryStrip" style="display:none">
+      <div class="summary-chip"><div class="summary-num" id="sumFloors">0</div><div class="summary-label">Pisos listos</div></div>
+      <div class="summary-chip"><div class="summary-num" id="sumMeters">0</div><div class="summary-label">Medidores</div></div>
+      <div class="summary-chip"><div class="summary-num" id="sumPending" style="color:var(--warn)">0</div><div class="summary-label">Pendientes</div></div>
+    </div>
+    <div class="hscroll" id="floorBar"></div>
+    <div class="error-card" id="errorCard"></div>
+    <div id="floorContent"></div>
+    <div id="historySection"></div>
+  </div>
+
+  <div class="export-bar" id="exportBar">
+    <div class="export-inner">
+      <button class="btn btn-sheets" onclick="exportToSheets()" style="flex:2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 3h-15A1.5 1.5 0 003 4.5v15A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0019.5 3zM9 16.5H6v-2h3v2zm0-4H6v-2h3v2zm0-4H6V6.5h3V8.5zm4.5 8H10.5v-2h3v2zm0-4H10.5v-2h3v2zm0-4H10.5V6.5h3V8.5zm4.5 8H15v-2h3v2zm0-4H15v-2h3v2zm0-4H15V6.5h3V8.5z"/></svg>
+        Crear planilla Excel
+      </button>
+      <button class="btn btn-secondary" onclick="exportCSV()" style="flex:1">⬇ CSV</button>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">⚙ Configurar Condominio</div>
+    <div class="form-row">
+      <label class="form-label">Nombre del Condominio / Edificio</label>
+      <input class="form-input" id="buildingName" placeholder="Ej: Condominio Las Torres" maxlength="80" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">N° de Pisos con Medidores</label>
+      <input class="form-input" type="number" id="numFloors" placeholder="Ej: 8" min="1" max="30" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Tipo de Medidor</label>
+      <select class="form-select" id="meterType">
+        <option value="Agua (m³)">Agua (m³)</option>
+        <option value="Electricidad (kWh)">Electricidad (kWh)</option>
+        <option value="Gas (m³)">Gas (m³)</option>
+        <option value="Mixto">Mixto</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Torres / Bloques</label>
+      <div id="towersList"></div>
+      <button class="btn-add-tower" onclick="addTowerField()">+ Agregar torre</button>
+    </div>
+    <div class="google-auth-section">
+      <div class="google-auth-title">🔗 Google Sheets</div>
+      <div class="google-auth-sub">Conecta tu cuenta Google para exportar directamente a tu Drive.</div>
+      <div class="google-status connected" id="googleStatus" style="display:none"></div>
+      <button class="btn-google" id="btnGoogleAuth" onclick="handleGoogleAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Conectar con Google
+      </button>
+      <button class="btn-google-disconnect" id="btnGoogleDisconnect" onclick="disconnectGoogle()" style="display:none">Desconectar cuenta</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveConfig()">Guardar ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="g-spinner" id="gSpinner"><div class="g-spinner-ring"></div><div class="g-spinner-text" id="gSpinnerText">Exportando…</div></div>
+
+<script>
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+var GOOGLE_CLIENT_ID = '126423843180-n3m4iqfeu9kek28derurqjsvcu0e291l.apps.googleusercontent.com';
+var GOOGLE_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive';
+var REDIRECT_URI = 'https://montemaradm.github.io/meterscan/';
+var MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+var G = { condos: [], googleToken: null, sheetsUrl: null, photoStore: {}, db: null };
+
+// ─── INDEXEDDB — almacenamiento persistente de fotos ─────────────────────────
+var DB_NAME = 'MeterScanPhotos';
+var DB_VERSION = 1;
+var DB_STORE = 'photos';
+
+function initDB() {
+  return new Promise(function(resolve, reject) {
+    if (G.db) { resolve(G.db); return; }
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = function(e) { G.db = e.target.result; resolve(G.db); };
+    req.onerror = function(e) { console.warn('IndexedDB error:', e); reject(e); };
+  });
+}
+
+function dbSavePhoto(key, dataUrl) {
+  return initDB().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ key: key, dataUrl: dataUrl });
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror = function() { resolve(); }; // fail silently
+    });
+  }).catch(function() {});
+}
+
+function dbGetPhoto(key) {
+  return initDB().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx = db.transaction(DB_STORE, 'readonly');
+      var req = tx.objectStore(DB_STORE).get(key);
+      req.onsuccess = function(e) { resolve(e.target.result ? e.target.result.dataUrl : null); };
+      req.onerror = function() { resolve(null); };
+    });
+  }).catch(function() { return null; });
+}
+
+function dbDeletePhoto(key) {
+  return initDB().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(key);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror = function() { resolve(); };
+    });
+  }).catch(function() {});
+}
+
+function dbGetAllPhotoKeys() {
+  return initDB().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx = db.transaction(DB_STORE, 'readonly');
+      var req = tx.objectStore(DB_STORE).getAllKeys();
+      req.onsuccess = function(e) { resolve(e.target.result || []); };
+      req.onerror = function() { resolve([]); };
+    });
+  }).catch(function() { return []; });
+}
+
+function makePhotoKey(condoId, periodKey, tower, floorIdx, photoIdx) {
+  return [condoId, periodKey, tower, floorIdx, photoIdx].join('||');
+}
+var S = { condoId: null, building: null, towers: [], currentTower: 0, currentFloor: 0, towerData: {}, meterTemplate: null, periodKey: null };
+
+// ─── SECURITY ───────────────────────────────────────────────────────────────
+function buildPeriodKeyFromNow() {
+  var now = new Date();
+  return 'p_' + (now.getMonth()+1) + '_' + now.getFullYear();
+}
+function buildPeriodKey() {
+  var month = document.getElementById('periodMonth') ? document.getElementById('periodMonth').value : (new Date().getMonth()+1);
+  var year = document.getElementById('periodYear') ? document.getElementById('periodYear').value : new Date().getFullYear();
+  return 'p_' + month + '_' + year;
+}
+function getOrCreatePeriodData(condo, key) {
+  if (!condo.periods) condo.periods = {};
+  if (!condo.periods[key]) condo.periods[key] = { towerData: {} };
+  return condo.periods[key];
+}
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  var saved = localStorage.getItem('mScanCondos');
+  if (saved) G.condos = JSON.parse(saved);
+  var gToken = localStorage.getItem('mScanGToken');
+  var gExpiry = parseInt(localStorage.getItem('mScanGTokenExpiry') || '0');
+  if (gToken && gExpiry && Date.now() < gExpiry) G.googleToken = gToken;
+  else if (gToken) { localStorage.removeItem('mScanGToken'); localStorage.removeItem('mScanGTokenExpiry'); }
+
+  if (window.location.hash.includes('access_token')) {
+    var p = new URLSearchParams(window.location.hash.substring(1));
+    var token = p.get('access_token');
+    if (token) {
+      G.googleToken = token;
+      localStorage.setItem('mScanGToken', token);
+      localStorage.setItem('mScanGTokenExpiry', (Date.now() + 3500000).toString());
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + token } })
+        .then(function(r) { return r.json(); })
+        .then(function(info) { localStorage.setItem('mScanGEmail', info.email || ''); updateGoogleUI(); })
+        .catch(function() {});
+      history.replaceState(null, '', window.location.pathname);
+      showToast('Google conectado \u2713', 'success');
+    }
+  }
+
+  // Initialize IndexedDB on startup
+  initDB().catch(function(e) { console.warn('IndexedDB not available:', e); });
+  updateGoogleUI();
+  var lastCondoId = localStorage.getItem('mScanLastCondo');
+  if (lastCondoId && G.condos.find(function(c) { return c.id === lastCondoId; })) {
+    localStorage.removeItem('mScanLastCondo');
+    openCondo(lastCondoId);
+  } else {
+    showHome();
+  }
+});
+
+// ─── HOME ───────────────────────────────────────────────────────────────────
+function showHome() {
+  document.getElementById('homeScreen').style.display = 'block';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('exportBar').style.display = 'none';
+  renderCondoList(); renderActivity(); updateHomeGoogleBtn();
+}
+
+function goHome() {
+  if (S.condoId) persistCondoSession();
+  localStorage.removeItem('mScanLastCondo');
+  S.condoId = null; S.meterTemplate = null;
+  showHome();
+}
+
+function renderCondoList() {
+  var list = document.getElementById('condoList');
+  if (G.condos.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">Sin condominios registrados</div><div class="empty-sub">Agrega tu primer condominio para comenzar.</div></div>';
+    return;
+  }
+  list.innerHTML = G.condos.map(function(c) {
+    var totalFloors = (c.towers || ['Principal']).reduce(function(s, t) { return s + ((c.towerData && c.towerData[t]) ? c.towerData[t].length : c.floors); }, 0);
+    var doneFloors = (c.towers || ['Principal']).reduce(function(s, t) { return s + ((c.towerData && c.towerData[t]) ? c.towerData[t].filter(function(f) { return f.done; }).length : 0); }, 0);
+    var pct = totalFloors > 0 ? Math.round(doneFloors / totalFloors * 100) : 0;
+    var towersLabel = (c.towers || []).length > 1 ? c.towers.length + ' torres \u00b7 ' : '';
+    return '<div class="condo-card" onclick="openCondo(\'' + c.id + '\')">' +
+      '<div class="condo-icon">\ud83c\udfe2</div>' +
+      '<div class="condo-info">' +
+        '<div class="condo-name">' + sanitize(c.name) + '</div>' +
+        '<div class="condo-meta">' + towersLabel + c.floors + ' pisos \u00b7 ' + sanitize(c.type) + '</div>' +
+        '<div class="condo-bar"><div class="condo-bar-fill' + (pct === 100 ? ' complete' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<div class="condo-progress"><div class="condo-pct">' + pct + '%</div><div class="condo-pct-label">completo</div></div>' +
+      '<div class="condo-actions"><button class="condo-action-btn" onclick="event.stopPropagation();deleteCondo(\'' + c.id + '\')" title="Eliminar">\ud83d\uddd1</button></div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderActivity() {
+  var list = document.getElementById('activityList');
+  var events = [];
+  G.condos.forEach(function(c) {
+    (c.towers || ['Principal']).forEach(function(t) {
+      ((c.towerData && c.towerData[t]) || []).forEach(function(f) {
+        if (f.done && f.lastSaved) events.push({ condo: c.name, tower: t, floor: f.label, time: f.lastSaved, meters: f.meters.length, hasTowers: (c.towers || []).length > 1 });
+      });
+    });
+  });
+  events.sort(function(a, b) { return new Date(b.time) - new Date(a.time); });
+  var recent = events.slice(0, 5);
+  if (!recent.length) { list.innerHTML = '<div style="font-size:.8rem;color:var(--muted);padding:12px 0;text-align:center">Sin actividad reciente</div>'; return; }
+  list.innerHTML = recent.map(function(e) {
+    var d = new Date(e.time), now = new Date(), diff = (now - d) / 60000;
+    var timeStr = diff < 60 ? 'hace ' + Math.round(diff) + 'm' : diff < 1440 ? 'hace ' + Math.round(diff/60) + 'h' : d.toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit'});
+    return '<div class="activity-item"><div class="activity-dot"></div>' +
+      '<div class="activity-text"><strong>' + sanitize(e.condo) + '</strong>' + (e.hasTowers ? ' \u00b7 ' + sanitize(e.tower) : '') + ' \u2014 ' + sanitize(e.floor) + ' <span style="color:var(--muted)">(' + e.meters + ' med.)</span></div>' +
+      '<div class="activity-time">' + timeStr + '</div></div>';
+  }).join('');
+}
+
+function newCondo() {
+  S.condoId = null;
+  document.getElementById('modalTitle').textContent = '\ud83c\udfe2 Nuevo Condominio';
+  document.getElementById('buildingName').value = '';
+  document.getElementById('numFloors').value = '';
+  document.getElementById('meterType').value = 'Agua (m\u00b3)';
+  document.getElementById('towersList').innerHTML = '';
+  addTowerField('Torre A');
+  updateGoogleUI();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function deleteCondo(id) {
+  if (!confirm('\u00bfEliminar este condominio y todos sus registros?')) return;
+  G.condos = G.condos.filter(function(c) { return c.id !== id; });
+  saveCondos(); renderCondoList(); renderActivity();
+  showToast('Condominio eliminado', 'info');
+}
+
+function openCondo(id) {
+  var condo = G.condos.find(function(c) { return c.id === id; });
+  if (!condo) return;
+  S.condoId = id;
+  localStorage.setItem('mScanLastCondo', id);
+  S.building = { name: condo.name, floors: condo.floors, type: condo.type, towers: condo.towers };
+  S.towers = condo.towers || ['Principal'];
+  var initKey = buildPeriodKeyFromNow();
+  S.periodKey = initKey;
+  var periodData = (condo.periods && condo.periods[initKey]) ? condo.periods[initKey] : null;
+  // Deep copy to prevent shared references between periods
+  S.towerData = (periodData && periodData.towerData) ? JSON.parse(JSON.stringify(periodData.towerData)) : {};
+  S.currentTower = 0; S.currentFloor = 0;
+  var tmpl = localStorage.getItem('mScanTemplate_' + id);
+  S.meterTemplate = tmpl ? JSON.parse(tmpl) : null;
+
+  S.towers.forEach(function(t) {
+    if (!S.towerData[t]) {
+      S.towerData[t] = Array.from({ length: condo.floors }, function(_, i) {
+        return { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null };
+      });
+    }
+  });
+
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('appCondoLabel').textContent = condo.name;
+  document.getElementById('summaryStrip').style.display = 'grid';
+  document.getElementById('towerSection').style.display = S.towers.length > 1 ? 'block' : 'none';
+  document.getElementById('exportBar').style.display = 'flex';
+  document.getElementById('sheetsSuccess').classList.remove('visible');
+
+  if (S.paused) {
+    var ts = S.pausedAt ? new Date(S.pausedAt).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+  } else {
+  }
+
+  renderTowerBar(); renderFloorBar(); renderFloorContent(); updateSummary(); renderHistory();
+  initPeriodBar();
+}
+
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+function addTowerField(value) {
+  var list = document.getElementById('towersList');
+  var row = document.createElement('div'); row.className = 'tower-row';
+  row.innerHTML = '<input class="form-input" placeholder="Ej: Torre A" value="' + sanitize(value || '') + '" maxlength="40" /><button class="btn-icon" onclick="this.parentElement.remove()">\u2715</button>';
+  list.appendChild(row);
+}
+
+function saveConfig() {
+  var name = document.getElementById('buildingName').value.trim();
+  var floors = parseInt(document.getElementById('numFloors').value);
+  var type = document.getElementById('meterType').value;
+  var towers = Array.from(document.querySelectorAll('#towersList .tower-row input')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+  if (!towers.length) towers = ['Principal'];
+  if (!name || !floors) { showToast('\u26a0 Completa nombre y pisos', 'warning'); return; }
+
+  if (S.condoId) {
+    var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+    if (condo) {
+      condo.name = name; condo.floors = floors; condo.type = type; condo.towers = towers;
+      S.building = { name: name, floors: floors, type: type, towers: towers };
+      S.towers = towers;
+      towers.forEach(function(t) {
+        if (!S.towerData[t]) S.towerData[t] = Array.from({ length: floors }, function(_, i) { return { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null }; });
+      });
+      persistCondoSession();
+      document.getElementById('appCondoLabel').textContent = name;
+      document.getElementById('towerSection').style.display = towers.length > 1 ? 'block' : 'none';
+      renderTowerBar(); renderFloorBar(); renderFloorContent(); updateSummary();
+    }
+  } else {
+    var id = 'c' + Date.now();
+    var towerData = {};
+    towers.forEach(function(t) { towerData[t] = Array.from({ length: floors }, function(_, i) { return { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null }; }); });
+    G.condos.push({ id: id, name: name, floors: floors, type: type, towers: towers, towerData: towerData, createdAt: new Date().toISOString() });
+    saveCondos(); closeModal(); openCondo(id); return;
+  }
+  closeModal(); showToast('Guardado \u2713', 'success');
+}
+
+function openModal() {
+  if (S.condoId) {
+    document.getElementById('modalTitle').textContent = '\u2699 Editar Condominio';
+    var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+    if (condo) {
+      document.getElementById('buildingName').value = condo.name;
+      document.getElementById('numFloors').value = condo.floors;
+      document.getElementById('meterType').value = condo.type;
+      document.getElementById('towersList').innerHTML = '';
+      (condo.towers || ['Torre A']).forEach(function(t) { addTowerField(t); });
+    }
+  }
+  updateGoogleUI();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function persistCondoSession() {
+  var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+  if (!condo) return;
+  var key = S.periodKey || buildPeriodKey();
+  if (!condo.periods) condo.periods = {};
+  if (!condo.periods[key]) condo.periods[key] = {};
+  condo.periods[key].towerData = stripPhotos(S.towerData);
+  condo.lastActivity = new Date().toISOString();
+  saveCondos();
+}
+function saveCondos() { localStorage.setItem('mScanCondos', JSON.stringify(G.condos)); }
+function stripPhotos(td) {
+  var c = JSON.parse(JSON.stringify(td));
+  Object.values(c).forEach(function(floors) {
+    floors.forEach(function(f) {
+      f.meters.forEach(function(m) { delete m.photoDataUrl; });
+      // Keep backupPhotos count but strip data
+      if (f.backupPhotos) f.backupPhotos = f.backupPhotos.map(function(p) { return { name: p.name }; });
+    });
+  });
+  return c;
+}
+
+// ─── PERIOD ─────────────────────────────────────────────────────────────────
+function initPeriodBar() {
+  var bar = document.getElementById('periodBar');
+  var monthSel = document.getElementById('periodMonth');
+  var yearSel = document.getElementById('periodYear');
+  if (!bar) return;
+  var now = new Date(), curYear = now.getFullYear();
+  yearSel.innerHTML = [curYear-1, curYear, curYear+1].map(function(y) { return '<option value="' + y + '"' + (y === curYear ? ' selected' : '') + '>' + y + '</option>'; }).join('');
+  monthSel.value = now.getMonth() + 1;
+  var saved = localStorage.getItem('mScanPeriod_' + S.condoId);
+  if (saved) { var p = JSON.parse(saved); monthSel.value = p.month; yearSel.value = p.year; }
+  bar.style.display = 'flex';
+  updatePeriodBadge();
+  // Sync period key after bar is initialized
+  var key = buildPeriodKey();
+  if (key !== S.periodKey) {
+    S.periodKey = key;
+    // Load correct period data
+    var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+    if (condo && condo.periods && condo.periods[key] && condo.periods[key].towerData) {
+      // Deep copy to prevent shared references between periods
+      S.towerData = JSON.parse(JSON.stringify(condo.periods[key].towerData));
+    }
+  }
+}
+function savePeriod() {
+  var month = document.getElementById('periodMonth').value;
+  var year = document.getElementById('periodYear').value;
+  localStorage.setItem('mScanPeriod_' + S.condoId, JSON.stringify({ month: month, year: year }));
+  updatePeriodBadge();
+  // Switch towerData to the selected period
+  switchToPeriod();
+}
+function switchToPeriod() {
+  var newKey = buildPeriodKey();
+  if (newKey === S.periodKey) return; // same period, nothing to do
+  // Save current period before switching
+  if (S.periodKey) persistCondoSession();
+  S.periodKey = newKey;
+  // Load data for new period (or create fresh)
+  var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+  if (!condo) return;
+  var periodData = (condo.periods && condo.periods[newKey]) ? condo.periods[newKey] : null;
+  if (periodData && periodData.towerData) {
+    // Deep copy to prevent shared references between periods
+    S.towerData = JSON.parse(JSON.stringify(periodData.towerData));
+    // Ensure all towers/floors exist
+    S.towers.forEach(function(t) {
+      if (!S.towerData[t]) {
+        S.towerData[t] = Array.from({ length: condo.floors }, function(_, i) {
+          return { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null };
+        });
+      }
+    });
+  } else {
+    // New period: create fresh floors but keep meter numbers from template
+    S.towerData = {};
+    S.towers.forEach(function(t) {
+      S.towerData[t] = Array.from({ length: condo.floors }, function(_, i) {
+        var floor = { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null };
+        // Apply template numbers if available
+        if (S.meterTemplate) {
+          floor.meters = S.meterTemplate.map(function(num, mIdx) {
+            return Object.assign(makeMeter(mIdx+1), { number: deriveNumber(num, i+1) });
+          });
+        }
+        return floor;
+      });
+    });
+  }
+  // Re-render everything
+  S.currentFloor = 0; S.currentTower = 0;
+  renderTowerBar(); renderFloorBar(); renderFloorContent(); updateSummary(); renderHistory();
+  document.getElementById('sheetsSuccess').classList.remove('visible');
+  showToast('Período cambiado: ' + MONTHS_ES[parseInt(buildPeriodKey().split('_')[1])-1] + ' ' + buildPeriodKey().split('_')[2], 'info');
+}
+function updatePeriodBadge() {
+  var month = parseInt(document.getElementById('periodMonth') ? document.getElementById('periodMonth').value : new Date().getMonth()+1);
+  var year = document.getElementById('periodYear') ? document.getElementById('periodYear').value : new Date().getFullYear();
+  var badge = document.getElementById('periodBadge');
+  if (badge) badge.textContent = MONTHS_ES[month-1].slice(0,3) + ' ' + year;
+}
+function getPeriod() {
+  var month = parseInt(document.getElementById('periodMonth') ? document.getElementById('periodMonth').value : new Date().getMonth()+1);
+  var year = parseInt(document.getElementById('periodYear') ? document.getElementById('periodYear').value : new Date().getFullYear());
+  return { month: month, year: year, monthName: MONTHS_ES[month-1], sheetName: MONTHS_ES[month-1] + ' ' + year };
+}
+
+// ─── TOWER / FLOOR ───────────────────────────────────────────────────────────
+function currentFloors() { return S.towerData[S.towers[S.currentTower]] || []; }
+function renderTowerBar() {
+  var bar = document.getElementById('towerBar'); bar.innerHTML = '';
+  S.towers.forEach(function(t, i) {
+    var floors = S.towerData[t] || [];
+    var allDone = floors.length > 0 && floors.every(function(f) { return f.done; });
+    var c = document.createElement('div');
+    c.className = 'tower-chip' + (i === S.currentTower ? ' active' : '') + (allDone ? ' done' : '');
+    c.textContent = t; c.onclick = function() { selectTower(i); }; bar.appendChild(c);
+  });
+}
+function selectTower(i) { S.currentTower = i; S.currentFloor = 0; renderTowerBar(); renderFloorBar(); renderFloorContent(); updateSummary(); }
+function renderFloorBar() {
+  var bar = document.getElementById('floorBar'); bar.innerHTML = '';
+  currentFloors().forEach(function(f, i) {
+    var c = document.createElement('div');
+    c.className = 'floor-chip' + (i === S.currentFloor ? ' active' : '') + (f.done ? ' done' : '');
+    c.textContent = f.label; c.onclick = function() { selectFloor(i); }; bar.appendChild(c);
+  });
+}
+function selectFloor(i) { S.currentFloor = i; renderFloorBar(); renderFloorContent(); }
+
+// ─── FLOOR CONTENT ───────────────────────────────────────────────────────────
+function renderFloorContent() {
+  var floor = currentFloors()[S.currentFloor];
+  if (!floor) return;
+  var tower = S.towers[S.currentTower];
+  var isFloor1 = S.currentFloor === 0;
+  var templateSaved = !!(S.meterTemplate && S.meterTemplate.length > 0);
+
+  if (!isFloor1 && templateSaved && floor.meters.length === 0) applyTemplateToFloor(floor);
+  else if (!isFloor1 && !templateSaved && floor.meters.length === 0) floor.meters.push(makeMeter(1));
+  if (isFloor1 && floor.meters.length === 0) floor.meters.push(makeMeter(1));
+
+  var floor1SetupHTML = isFloor1 && !templateSaved
+    ? '<div class="floor1-setup" id="floor1Setup">' +
+        '<div class="floor1-setup-title">\ud83d\udd22 Configura los medidores</div>' +
+        '<div class="floor1-setup-sub">Ingresa cu\u00e1ntos medidores hay por piso y sus n\u00fameros. El sistema los replicar\u00e1 en todos los pisos.</div>' +
+        '<div class="floor1-qty-row">' +
+          '<span class="floor1-qty-label">N\u00b0 de medidores por piso:</span>' +
+          '<input class="floor1-qty-input" type="number" id="floor1Qty" min="1" max="20" value="' + (floor.meters.length || 1) + '" onchange="updateFloor1Qty(this.value)" />' +
+          '<button class="btn-gen-meters" onclick="updateFloor1Qty(document.getElementById(\'floor1Qty\').value)">Generar</button>' +
+        '</div>' +
+        '<div class="floor1-meter-inputs" id="floor1MeterInputs"></div>' +
+        '<button class="btn-save-meters" onclick="saveMetersTemplate()">\u2713 Guardar medidores y aplicar a todos los pisos</button>' +
+      '</div>'
+    : '';
+
+  var savedBadgeHTML = isFloor1 && templateSaved
+    ? '<div class="meters-saved-badge">\u2713 Plantilla: ' + S.meterTemplate.length + ' medidores/piso<button class="btn-edit-template" onclick="editTemplate()">Editar</button></div>'
+    : '';
+
+  var backupCount = floor.backupPhotos ? floor.backupPhotos.length : 0;
+  var maxPhotos = floor.meters.length;
+
+  document.getElementById('floorContent').innerHTML =
+    floor1SetupHTML + savedBadgeHTML +
+    '<div class="floor-card">' +
+      '<div class="floor-card-header">' +
+        '<div class="floor-card-title">' + (S.towers.length > 1 ? tower + ' \u00b7 ' : '') + floor.label + '</div>' +
+        '<div class="floor-card-meta">' + floor.meters.filter(function(m) { return m.done; }).length + '/' + floor.meters.length + ' medidores</div>' +
+      '</div>' +
+      '<div class="meters-setup">' +
+        '<div class="meters-setup-title">Medidores del piso</div>' +
+        '<div id="metersList"></div>' +
+        '<button class="add-meter-btn" onclick="addMeter()">+ Agregar medidor</button>' +
+      '</div>' +
+      '<div class="backup-section">' +
+        '<div class="backup-title">Fotos de respaldo del piso</div>' +
+        '<div class="backup-actions">' +
+          '<label class="btn-backup" style="cursor:pointer;flex:1">' +
+            '\ud83d\udcf7 Adjuntar fotos de respaldo' +
+            '<input type="file" accept="image/*" capture="environment" onchange="addBackupPhoto(event,' + S.currentFloor + ',' + S.currentTower + ')"' + (backupCount >= maxPhotos ? ' disabled' : '') + ' />' +
+          '</label>' +
+          '<label class="btn-backup" style="cursor:pointer;flex:1;margin-left:8px">' +
+            '\ud83d\uddbc Galería' +
+            '<input type="file" accept="image/*" onchange="addBackupPhoto(event,' + S.currentFloor + ',' + S.currentTower + ')"' + (backupCount >= maxPhotos ? ' disabled' : '') + ' />' +
+          '</label>' +
+        '</div>' +
+        '<div class="backup-count">' + backupCount + ' / ' + maxPhotos + ' fotos de respaldo</div>' +
+        '<div class="backup-photos-grid" id="backupGrid-' + S.currentFloor + '"></div>' +
+      '</div>' +
+    '</div>';
+
+  if (isFloor1 && !templateSaved) renderFloor1Inputs(floor.meters.length || 1);
+  renderMetersList(floor);
+  renderBackupGrid(floor, S.currentFloor);
+}
+
+// ─── BACKUP PHOTOS ───────────────────────────────────────────────────────────
+function addBackupPhoto(event, floorIdx, towerIdx) {
+  var file = event.target.files[0]; if (!file) return;
+  event.target.value = '';
+  var floor = (S.towerData[S.towers[towerIdx]] || [])[floorIdx];
+  if (!floor) return;
+  if (!floor.backupPhotos) floor.backupPhotos = [];
+  var maxPhotos = floor.meters.length;
+  if (floor.backupPhotos.length >= maxPhotos) { showToast('M\u00e1ximo ' + maxPhotos + ' fotos de respaldo', 'warning'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var photoIdx = floor.backupPhotos.length;
+    floor.backupPhotos.push({ name: file.name });
+    var photoKey = makePhotoKey(S.condoId, S.periodKey, S.towers[towerIdx], floorIdx, photoIdx);
+    // Save in memory (fast access)
+    G.photoStore[photoKey] = e.target.result;
+    // Save in IndexedDB (persists between sessions)
+    dbSavePhoto(photoKey, e.target.result);
+    persistCondoSession();
+    renderFloorContent();
+    showToast('Foto guardada \u2713', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBackupPhoto(floorIdx, towerIdx, photoIdx) {
+  var floor = (S.towerData[S.towers[towerIdx]] || [])[floorIdx];
+  if (floor && floor.backupPhotos) {
+    var tower = S.towers[towerIdx];
+    var total = floor.backupPhotos.length;
+    // Shift keys down for photos after the removed one (memory + IndexedDB)
+    var promises = [];
+    for (var i = photoIdx; i < total - 1; i++) {
+      var fromKey = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, i+1);
+      var toKey   = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, i);
+      G.photoStore[toKey] = G.photoStore[fromKey];
+      // Rewrite in IndexedDB
+      (function(tk, fk) {
+        dbGetPhoto(fk).then(function(d) { if (d) dbSavePhoto(tk, d); });
+      })(toKey, fromKey);
+    }
+    // Delete the last slot
+    var lastKey = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, total-1);
+    delete G.photoStore[lastKey];
+    dbDeletePhoto(lastKey);
+    floor.backupPhotos.splice(photoIdx, 1);
+    persistCondoSession();
+    renderFloorContent();
+  }
+}
+
+function viewBackupPhoto(floorIdx, towerIdx, photoIdx) {
+  var floor = (S.towerData[S.towers[towerIdx]] || [])[floorIdx];
+  if (!floor || !floor.backupPhotos || !floor.backupPhotos[photoIdx]) return;
+  var photo = floor.backupPhotos[photoIdx];
+  var tower = S.towers[towerIdx];
+  var photoKey = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, photoIdx);
+  // Try memory first, then IndexedDB
+  function openPhoto(dataUrl) {
+    if (!dataUrl) { showToast('Foto no disponible', 'warning'); return; }
+    var win = window.open('', '_blank');
+    if (win) {
+      var img = win.document.createElement('img');
+      img.src = dataUrl;
+      img.style.cssText = 'max-width:100%;max-height:100vh;object-fit:contain;display:block;margin:auto';
+      win.document.body.style.cssText = 'margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh';
+      win.document.title = photo.name || 'Foto de respaldo';
+      win.document.body.appendChild(img);
+    }
+  }
+  if (G.photoStore[photoKey]) {
+    openPhoto(G.photoStore[photoKey]);
+  } else {
+    dbGetPhoto(photoKey).then(function(dataUrl) {
+      if (dataUrl) G.photoStore[photoKey] = dataUrl;
+      openPhoto(dataUrl);
+    });
+  }
+}
+
+function renderBackupGrid(floor, floorIdx) {
+  var grid = document.getElementById('backupGrid-' + floorIdx);
+  if (!grid) return;
+  var photos = floor.backupPhotos || [];
+  if (!photos.length) { grid.innerHTML = ''; return; }
+  var towerIdx = S.currentTower;
+  var tower = S.towers[towerIdx];
+  // Render placeholders first, then fill from memory or IndexedDB
+  grid.innerHTML = photos.map(function(p, i) {
+    var photoKey = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, i);
+    var dataUrl = G.photoStore[photoKey] || '';
+    return '<div class="backup-thumb" id="bt-' + floorIdx + '-' + i + '">' +
+      (dataUrl
+        ? '<img src="' + dataUrl + '" onclick="viewBackupPhoto(' + floorIdx + ',' + towerIdx + ',' + i + ')" title="Ver foto" />'
+        : '<div class="bt-loading" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem">⏳</div>') +
+      '<button class="backup-thumb-del" onclick="removeBackupPhoto(' + floorIdx + ',' + towerIdx + ',' + i + ')">\u2715</button>' +
+    '</div>';
+  }).join('');
+  // Load any missing photos from IndexedDB
+  photos.forEach(function(p, i) {
+    var photoKey = makePhotoKey(S.condoId, S.periodKey, tower, floorIdx, i);
+    if (G.photoStore[photoKey]) return; // already in memory
+    dbGetPhoto(photoKey).then(function(dataUrl) {
+      if (!dataUrl) return;
+      G.photoStore[photoKey] = dataUrl; // cache in memory
+      var thumb = document.getElementById('bt-' + floorIdx + '-' + i);
+      if (!thumb) return;
+      var loading = thumb.querySelector('.bt-loading');
+      if (loading) {
+        var img = document.createElement('img');
+        img.src = dataUrl;
+        img.title = 'Ver foto';
+        img.onclick = (function(fi, ti, pi) { return function() { viewBackupPhoto(fi, ti, pi); }; })(floorIdx, towerIdx, i);
+        thumb.replaceChild(img, loading);
+      }
+    });
+  });
+}
+
+// ─── METERS ─────────────────────────────────────────────────────────────────
+function makeMeter(num) { return { id: Date.now() + Math.random(), number: 'Medidor ' + num, manualReading: '', comment: '', done: false }; }
+
+function renderMetersList(floor) {
+  var list = document.getElementById('metersList'); if (!list) return;
+  var unit = (S.building && S.building.type && S.building.type.indexOf('Electricidad') >= 0) ? 'kWh' : 'm\u00b3';
+  list.innerHTML = '';
+  floor.meters.forEach(function(m, idx) {
+    var row = document.createElement('div'); row.id = 'mrow-' + idx;
+    row.innerHTML =
+      '<div class="meter-card">' +
+        '<div class="meter-card-header">' +
+          '<div class="meter-num-badge">' + (idx+1) + '</div>' +
+          '<input style="flex:1;background:transparent;border:none;outline:none;font-family:Plus Jakarta Sans,sans-serif;font-size:.95rem;font-weight:800;color:var(--accent);min-width:0;letter-spacing:-.3px"' +
+            ' value="' + sanitize(m.number) + '" placeholder="N\u00b0 o nombre del medidor" maxlength="40"' +
+            ' onchange="updateMeterNumber(' + idx + ',this.value)" />' +
+          '<button class="meter-del" onclick="deleteMeter(' + idx + ')">\u2715</button>' +
+        '</div>' +
+        '<div class="meter-card-body">' +
+          '<div>' +
+            '<div class="meter-field-label">\u270f\ufe0f Lectura manual</div>' +
+            '<div class="meter-manual-wrap' + (m.manualReading ? ' has-value' : '') + '">' +
+              '<input class="meter-manual-input" type="number" inputmode="decimal"' +
+                ' value="' + (m.manualReading || '') + '" placeholder="Ingresa la lectura"' +
+                ' onchange="setManualReading(' + idx + ',this.value)"' +
+                ' oninput="setManualReading(' + idx + ',this.value)" />' +
+              '<span class="meter-manual-unit">' + unit + '</span>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>';
+    list.appendChild(row);
+  });
+}
+
+function setManualReading(idx, val) {
+  var floor = currentFloors()[S.currentFloor];
+  var m = floor.meters[idx];
+  m.manualReading = val;
+  m.done = !!(val && val !== '');
+  checkFloorDone(floor);
+  floor.lastSaved = new Date().toISOString();
+  var wrap = document.querySelector('#mrow-' + idx + ' .meter-manual-wrap');
+  if (wrap) { if (val) wrap.classList.add('has-value'); else wrap.classList.remove('has-value'); }
+  var meta = document.querySelector('.floor-card-meta');
+  if (meta) meta.textContent = floor.meters.filter(function(m) { return m.done; }).length + '/' + floor.meters.length + ' medidores';
+  persistCondoSession(); updateSummary(); renderHistory(); renderFloorBar(); renderTowerBar();
+}
+function updateMeterNumber(idx, val) { currentFloors()[S.currentFloor].meters[idx].number = val; persistCondoSession(); }
+function checkFloorDone(floor) { floor.done = floor.meters.length > 0 && floor.meters.every(function(m) { return m.done; }); }
+function addMeter() {
+  var floor = currentFloors()[S.currentFloor];
+  floor.meters.push(makeMeter(floor.meters.length + 1));
+  persistCondoSession(); renderFloorContent(); updateSummary();
+}
+function deleteMeter(idx) {
+  var floor = currentFloors()[S.currentFloor];
+  floor.meters.splice(idx, 1);
+  persistCondoSession(); renderFloorContent(); updateSummary();
+}
+
+// ─── TEMPLATE ────────────────────────────────────────────────────────────────
+function renderFloor1Inputs(qty) {
+  var container = document.getElementById('floor1MeterInputs'); if (!container) return;
+  var floor = currentFloors()[0];
+  container.innerHTML = Array.from({ length: qty }, function(_, i) {
+    var existing = floor.meters[i] && !floor.meters[i].number.startsWith('Medidor') ? floor.meters[i].number : '';
+    return '<div class="floor1-meter-row">' +
+      '<div class="floor1-meter-num">' + (i+1) + '</div>' +
+      '<input class="floor1-meter-input" type="text" inputmode="numeric" maxlength="20"' +
+        ' placeholder="Ej: ' + (10 + i + 1) + '" value="' + sanitize(existing) + '" id="f1m-' + i + '" />' +
+    '</div>';
+  }).join('');
+}
+function updateFloor1Qty(val) {
+  var qty = Math.max(1, Math.min(20, parseInt(val) || 1));
+  document.getElementById('floor1Qty').value = qty;
+  var floor = currentFloors()[0];
+  while (floor.meters.length < qty) floor.meters.push(makeMeter(floor.meters.length + 1));
+  if (floor.meters.length > qty) floor.meters.splice(qty);
+  renderFloor1Inputs(qty);
+}
+function saveMetersTemplate() {
+  var floor = currentFloors()[0];
+  var inputs = document.querySelectorAll('[id^="f1m-"]');
+  var numbers = [];
+  var valid = true;
+  inputs.forEach(function(inp) {
+    var v = inp.value.trim();
+    if (!v) { inp.style.borderColor = 'var(--warn)'; valid = false; } else { inp.style.borderColor = ''; numbers.push(v); }
+  });
+  if (!valid) { showToast('\u26a0 Ingresa todos los n\u00fameros', 'warning'); return; }
+  numbers.forEach(function(num, i) { if (floor.meters[i]) floor.meters[i].number = num; });
+  S.meterTemplate = numbers;
+  localStorage.setItem('mScanTemplate_' + S.condoId, JSON.stringify(numbers));
+  var allFloors = currentFloors();
+  allFloors.forEach(function(f, fIdx) {
+    if (fIdx === 0) return;
+    f.meters = numbers.map(function(num, mIdx) { return Object.assign(makeMeter(mIdx+1), { number: deriveNumber(num, fIdx+1) }); });
+  });
+  persistCondoSession(); renderFloorBar(); renderTowerBar(); renderFloorContent();
+  showToast('\u2713 Plantilla guardada y aplicada', 'success');
+}
+function deriveNumber(floor1Num, floorNum) {
+  var str = String(floor1Num);
+  var match = str.match(/^([^0-9]*)([0-9]+)([^0-9]*)$/);
+  if (!match) return str;
+  var digits = match[2];
+  if (digits.startsWith('1')) return match[1] + String(floorNum) + digits.slice(1) + match[3];
+  return str;
+}
+function applyTemplateToFloor(floor) {
+  if (!S.meterTemplate) return;
+  var fIdx = floor.id;
+  floor.meters = S.meterTemplate.map(function(num, mIdx) { return Object.assign(makeMeter(mIdx+1), { number: deriveNumber(num, fIdx+1) }); });
+}
+function editTemplate() {
+  S.meterTemplate = null;
+  localStorage.removeItem('mScanTemplate_' + S.condoId);
+  currentFloors().forEach(function(f, i) { if (i > 0) f.meters = []; });
+  S.currentFloor = 0;
+  persistCondoSession(); renderFloorBar(); renderFloorContent();
+  showToast('Plantilla eliminada \u2014 reconfigura el Piso 1', 'info');
+}
+
+// ─── SUMMARY / HISTORY ───────────────────────────────────────────────────────
+function updateSummary() {
+  var doneF = 0, totalM = 0, pendingM = 0;
+  S.towers.forEach(function(t) {
+    (S.towerData[t] || []).forEach(function(f) {
+      if (f.done) doneF++;
+      f.meters.forEach(function(m) { totalM++; if (!m.done) pendingM++; });
+    });
+  });
+  document.getElementById('sumFloors').textContent = doneF;
+  document.getElementById('sumMeters').textContent = totalM;
+  document.getElementById('sumPending').textContent = pendingM;
+}
+function renderHistory() {
+  var section = document.getElementById('historySection');
+  var towerName = S.towers[S.currentTower];
+  var done = (S.towerData[towerName] || []).filter(function(f) { return f.done; });
+  if (!done.length) { section.innerHTML = ''; return; }
+  section.innerHTML = '<div class="section-label">Pisos completados' + (S.towers.length > 1 ? ' \u00b7 ' + sanitize(towerName) : '') + '</div>' +
+    done.map(function(f) {
+      return '<div class="history-item" onclick="selectFloor(' + f.id + ')">' +
+        '<div class="history-floor">' + (f.id+1) + '</div>' +
+        '<div class="history-info">' +
+          '<div class="history-name">' + sanitize(f.label) + '</div>' +
+          '<div class="history-meta">' + f.meters.map(function(m) { return sanitize(m.number); }).join(', ') + '</div>' +
+        '</div>' +
+        '<div class="history-count">' + f.meters.length + ' med. \u2713</div>' +
+      '</div>';
+    }).join('');
+}
+
+// ─── PAUSE ───────────────────────────────────────────────────────────────────
+function resetReadings() {
+  var period = getPeriod();
+  var msg = '¿Borrar todas las lecturas de ' + period.monthName + ' ' + period.year + '?\n\nEsto eliminará los valores ingresados y fotos de respaldo de este mes.\nLos demás meses NO se verán afectados.\nLa configuración de medidores se mantiene.';
+  if (!confirm(msg)) return;
+  // Reset ONLY current period readings, keep meter number structure
+  var condo = G.condos.find(function(c) { return c.id === S.condoId; });
+  S.towers.forEach(function(tower) {
+    S.towerData[tower] = Array.from({ length: condo.floors }, function(_, i) {
+      var floor = { id: i, label: 'Piso ' + (i+1), done: false, meters: [], backupPhotos: [], lastSaved: null };
+      if (S.meterTemplate) {
+        floor.meters = S.meterTemplate.map(function(num, mIdx) {
+          return Object.assign(makeMeter(mIdx+1), { number: deriveNumber(num, i+1) });
+        });
+      } else {
+        floor.meters.push(makeMeter(1));
+      }
+      return floor;
+    });
+  });
+  persistCondoSession();
+  renderFloorBar(); renderTowerBar(); renderFloorContent(); updateSummary(); renderHistory();
+  document.getElementById('sheetsSuccess').classList.remove('visible');
+  showToast('Lecturas de ' + period.monthName + ' reseteadas ✓', 'success');
+}
+
+
+
+// ─── GOOGLE AUTH ──────────────────────────────────────────────────────────────
+function handleGoogleAuth() {
+  if (G.googleToken) { disconnectGoogle(); return; }
+  if (S.condoId) localStorage.setItem('mScanLastCondo', S.condoId);
+  var params = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, redirect_uri: REDIRECT_URI, response_type: 'token', scope: GOOGLE_SCOPES, prompt: 'consent', include_granted_scopes: 'true' });
+  var authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  var w = 520, h = 620, left = Math.max(0, (screen.width-w)/2), top = Math.max(0, (screen.height-h)/2);
+  var popup = window.open(authUrl, 'googleAuth', 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes');
+  if (!popup) { window.location.href = authUrl; return; }
+  var poll = setInterval(function() {
+    try {
+      if (!popup || popup.closed) { clearInterval(poll); return; }
+      var hash = popup.location.hash;
+      if (!hash || !hash.includes('access_token')) return;
+      clearInterval(poll); popup.close();
+      var token = new URLSearchParams(hash.substring(1)).get('access_token');
+      if (!token) { showToast('No se obtuvo token', 'warning'); return; }
+      G.googleToken = token;
+      localStorage.setItem('mScanGToken', token);
+      localStorage.setItem('mScanGTokenExpiry', (Date.now()+3500000).toString());
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + token } })
+        .then(function(r) { return r.json(); })
+        .then(function(info) { localStorage.setItem('mScanGEmail', info.email || ''); updateGoogleUI(); })
+        .catch(function() {});
+      updateGoogleUI(); showToast('Google conectado \u2713', 'success'); closeModal();
+    } catch(e) {}
+  }, 300);
+  setTimeout(function() { clearInterval(poll); if (!popup.closed) popup.close(); }, 180000);
+}
+function disconnectGoogle() {
+  G.googleToken = null;
+  localStorage.removeItem('mScanGToken'); localStorage.removeItem('mScanGTokenExpiry'); localStorage.removeItem('mScanGEmail');
+  updateGoogleUI(); showToast('Cuenta desconectada', 'info');
+}
+function updateGoogleUI() {
+  var connected = !!G.googleToken;
+  var email = localStorage.getItem('mScanGEmail') || 'Cuenta conectada';
+  var status = document.getElementById('googleStatus');
+  var btnAuth = document.getElementById('btnGoogleAuth');
+  var btnDisc = document.getElementById('btnGoogleDisconnect');
+  if (status) { status.style.display = connected ? 'flex' : 'none'; if (connected) status.innerHTML = '<span>\u2713</span><span>' + sanitize(email) + '</span>'; }
+  if (btnAuth) btnAuth.style.display = connected ? 'none' : 'flex';
+  if (btnDisc) btnDisc.style.display = connected ? 'block' : 'none';
+  updateHomeGoogleBtn();
+}
+function updateHomeGoogleBtn() {
+  var btn = document.getElementById('homeGoogleBtn');
+  var label = document.getElementById('homeGoogleLabel');
+  if (!btn) return;
+  var connected = !!G.googleToken;
+  var email = localStorage.getItem('mScanGEmail') || '';
+  btn.className = 'home-google-btn' + (connected ? ' connected' : '');
+  label.textContent = connected ? (email || 'Google conectado') : 'Conectar Google';
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+// Upload a single base64 photo to Drive, return shareable URL or ''
+async function uploadPhotoToDrive(base64DataUrl, filename) {
+  if (!G.googleToken || !base64DataUrl) return '';
+  try {
+    var match = base64DataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) return '';
+    var mimeType = match[1];
+    var b64 = match[2];
+    var byteChars = atob(b64);
+    var byteArr = new Uint8Array(byteChars.length);
+    for (var i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    var meta = { name: filename, mimeType: mimeType };
+    var initResp = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink',
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + G.googleToken, 'Content-Type': 'application/json', 'X-Upload-Content-Type': mimeType }, body: JSON.stringify(meta) }
+    );
+    if (!initResp.ok) return '';
+    var uploadUrl = initResp.headers.get('Location');
+    if (!uploadUrl) return '';
+    var uploadResp = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': mimeType }, body: byteArr });
+    var data = await uploadResp.json();
+    if (!data.id) return '';
+    // Make publicly readable
+    await fetch('https://www.googleapis.com/drive/v3/files/' + data.id + '/permissions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + G.googleToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'reader', type: 'anyone' })
+    });
+    return data.webViewLink || ('https://drive.google.com/file/d/' + data.id + '/view');
+  } catch(e) { console.warn('Photo upload error:', e); return ''; }
+}
+
+async function exportToSheets() {
+  if (!G.googleToken) { showToast('Conecta tu cuenta Google primero', 'warning'); openModal(); return; }
+  var expiry = parseInt(localStorage.getItem('mScanGTokenExpiry') || '0');
+  if (expiry && Date.now() > expiry) {
+    G.googleToken = null; localStorage.removeItem('mScanGToken'); localStorage.removeItem('mScanGTokenExpiry');
+    updateGoogleUI(); showToast('Sesi\u00f3n expirada \u2014 reconecta Google', 'warning');
+    setTimeout(function() { if (confirm('\u00bfReconectar Google ahora?')) handleGoogleAuth(); }, 400);
+    return;
+  }
+  // Upload backup photos to Drive first and collect links by floor
+  var photoLinksMap = {};
+  var hasAnyPhotos = false;
+  S.towers.forEach(function(tower) {
+    (S.towerData[tower] || []).forEach(function(f) {
+      if (f.backupPhotos && f.backupPhotos.length > 0) hasAnyPhotos = true;
+    });
+  });
+  if (hasAnyPhotos && G.googleToken) {
+    showGSpinner('Subiendo fotos de respaldo a Drive…');
+    for (var ti = 0; ti < S.towers.length; ti++) {
+      var tower = S.towers[ti];
+      var floors = S.towerData[tower] || [];
+      for (var fi = 0; fi < floors.length; fi++) {
+        var f = floors[fi];
+        if (!f.backupPhotos || f.backupPhotos.length === 0) continue;
+        var floorKey = tower + '|' + f.id;
+        photoLinksMap[floorKey] = [];
+        for (var pi = 0; pi < f.backupPhotos.length; pi++) {
+          var photo = f.backupPhotos[pi];
+          var photoKey = makePhotoKey(S.condoId, S.periodKey, tower, f.id, pi);
+          // Load from memory or IndexedDB
+          var dataUrl = G.photoStore[photoKey] || (await dbGetPhoto(photoKey)) || '';
+          if (dataUrl) G.photoStore[photoKey] = dataUrl; // cache if loaded from DB
+          if (!dataUrl) { console.warn('Photo not found:', photoKey); continue; }
+          var period2 = getPeriod();
+          var safeName = [S.building.name, tower, f.label, 'foto' + (pi+1), period2.monthName, period2.year].join('_').replace(/[^a-zA-Z0-9_]/g, '_') + '.jpg';
+          var link = await uploadPhotoToDrive(dataUrl, safeName);
+          if (link) photoLinksMap[floorKey].push(link);
+        }
+      }
+    }
+  }
+  var rows = collectAllData(photoLinksMap);
+  if (rows.length <= 1) { showToast('No hay datos para exportar', 'warning'); return; }
+  var period = getPeriod();
+  var condoName = S.building.name;
+  var sheetName = period.sheetName;
+  showGSpinner('Buscando planilla en Drive\u2026');
+  try {
+    var ssId = null;
+    var searchResp = await gFetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27' + encodeURIComponent(condoName) + '%27%20and%20mimeType%3D%27application%2Fvnd.google-apps.spreadsheet%27%20and%20trashed%3Dfalse&fields=files(id,name)', 'GET', null);
+    if (searchResp.files && searchResp.files.length > 0) {
+      ssId = searchResp.files[0].id;
+      showGSpinner('Planilla encontrada\u2026');
+    } else {
+      showGSpinner('Creando planilla\u2026');
+      var cr = await gFetch('https://sheets.googleapis.com/v4/spreadsheets', 'POST', { properties: { title: condoName, locale: 'es_CL' }, sheets: [{ properties: { title: sheetName } }] });
+      ssId = cr.spreadsheetId;
+    }
+    var ssInfo = await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + '?fields=sheets.properties', 'GET', null);
+    var existingSheets = ssInfo.sheets.map(function(s) { return s.properties.title; });
+    var sheetProp = ssInfo.sheets.find(function(s) { return s.properties.title === sheetName; });
+    var sheetId = sheetProp ? sheetProp.properties.sheetId : null;
+    if (!existingSheets.includes(sheetName)) {
+      showGSpinner('Creando hoja "' + sheetName + '"\u2026');
+      var addResp = await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + ':batchUpdate', 'POST', { requests: [{ addSheet: { properties: { title: sheetName } } }] });
+      sheetId = addResp.replies[0].addSheet.properties.sheetId;
+    }
+    var existingData = await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + '/values/' + encodeURIComponent(sheetName) + '!A1:A2', 'GET', null);
+    var hasHeader = !!(existingData.values && existingData.values.length > 0);
+    showGSpinner('Escribiendo datos…');
+    if (!hasHeader) {
+      // Hoja nueva: escribir todo incluyendo encabezado
+      await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + '/values/' + encodeURIComponent(sheetName) + '!A1?valueInputOption=USER_ENTERED', 'PUT', { range: sheetName + '!A1', majorDimension: 'ROWS', values: rows });
+    } else {
+      // Hoja existente: limpiar datos previos y reescribir (evita duplicados)
+      await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + '/values/' + encodeURIComponent(sheetName) + '!A2:Z1000:clear', 'POST', {}).catch(function() {});
+      if (rows.length > 1) {
+        await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + '/values/' + encodeURIComponent(sheetName) + '!A2?valueInputOption=USER_ENTERED', 'PUT', { range: sheetName + '!A2', majorDimension: 'ROWS', values: rows.slice(1) });
+      }
+    }
+    showGSpinner('Aplicando formato\u2026');
+    var fmtRequests = [];
+    if (!hasHeader && sheetId !== null && sheetId !== undefined) {
+      fmtRequests.push({ repeatCell: { range: { sheetId: sheetId, startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.102, green: 0.361, blue: 1 }, textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } });
+    }
+    if (sheetId !== null && sheetId !== undefined) {
+      fmtRequests.push({ autoResizeDimensions: { dimensions: { sheetId: sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: rows[0].length } } });
+    }
+    if (fmtRequests.length > 0) await gFetch('https://sheets.googleapis.com/v4/spreadsheets/' + ssId + ':batchUpdate', 'POST', { requests: fmtRequests });
+
+    G.sheetsUrl = 'https://docs.google.com/spreadsheets/d/' + ssId + '/edit';
+    hideGSpinner();
+    document.getElementById('sheetsSuccess').classList.add('visible');
+    document.getElementById('sheetsLink').textContent = 'Abrir: ' + condoName + ' \u2014 ' + sheetName + ' \u2192';
+    showToast('\u2713 Exportado a Google Sheets', 'success');
+  } catch(err) {
+    hideGSpinner();
+    if (err.message.includes('401') || err.message.includes('403') || err.message.includes('authentication') || err.message.includes('credential')) {
+      G.googleToken = null; localStorage.removeItem('mScanGToken'); localStorage.removeItem('mScanGTokenExpiry');
+      updateGoogleUI(); showToast('Sesi\u00f3n expirada \u2014 reconecta Google', 'warning');
+      setTimeout(function() { if (confirm('\u00bfReconectar ahora?')) handleGoogleAuth(); }, 500);
+    } else { showError('Error al exportar: ' + err.message); }
+  }
+}
+
+async function gFetch(url, method, body) {
+  var opts = { method: method, headers: { 'Authorization': 'Bearer ' + G.googleToken, 'Content-Type': 'application/json' } };
+  if (body !== null) opts.body = JSON.stringify(body);
+  var r = await fetch(url, opts);
+  var d = await r.json();
+  if (!r.ok) throw new Error(d.error ? d.error.message : r.statusText);
+  return d;
+}
+function openSheets() { if (G.sheetsUrl) window.open(G.sheetsUrl, '_blank'); }
+
+function collectAllData(photoLinksMap) {
+  var period = getPeriod();
+  var header = ['Nombre del Condominio', 'Mes', 'A\u00f1o', 'Torre', 'Piso', 'N\u00famero de Medidor', 'Lectura', 'Comentarios', 'Fotos de Respaldo'];
+  var rows = [header];
+  S.towers.forEach(function(tower) {
+    (S.towerData[tower] || []).forEach(function(f) {
+      // Get photo links for this floor
+      var floorKey = tower + '|' + f.id;
+      var photoLinks = (photoLinksMap && photoLinksMap[floorKey]) ? photoLinksMap[floorKey] : [];
+      // Build photo cell: one link per photo
+      var photoCell = '';
+      if (photoLinks.length > 0) {
+        photoCell = photoLinks.join(' | ');
+      } else if (f.backupPhotos && f.backupPhotos.length > 0) {
+        photoCell = f.backupPhotos.length + ' foto(s) (sin link - sube a Drive primero)';
+      }
+      f.meters.forEach(function(m) {
+        if (m.manualReading || m.done) {
+          rows.push([
+            S.building.name, period.monthName, period.year,
+            S.towers.length > 1 ? tower : '',
+            f.label, m.number, m.manualReading || '',
+            m.comment || '',
+            photoCell
+          ]);
+        }
+      });
+    });
+  });
+  return rows;
+}
+
+function exportCSV() {
+  var rows = collectAllData();
+  if (rows.length <= 1) { showToast('No hay datos', 'warning'); return; }
+  var period = getPeriod();
+  var filename = S.building.name.split(' ').join('_') + '_' + period.monthName + '_' + period.year + '.csv';
+  var NL = String.fromCharCode(13) + String.fromCharCode(10);
+  var BOM = String.fromCharCode(0xFEFF);
+  var csvRows = rows.map(function(r) {
+    return r.map(function(c) { var s = String(c == null ? '' : c); return '"' + s.split('"').join('""') + '"'; }).join(',');
+  });
+  var blob = new Blob([BOM + csvRows.join(NL)], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV descargado', 'success');
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function showGSpinner(txt) { document.getElementById('gSpinnerText').textContent = txt; document.getElementById('gSpinner').classList.add('active'); }
+function hideGSpinner() { document.getElementById('gSpinner').classList.remove('active'); }
+function showError(msg) { var el = document.getElementById('errorCard'); if (!el) return; el.textContent = '\u26a0 ' + msg; el.classList.add('visible'); }
+function hideError() { var el = document.getElementById('errorCard'); if (el) el.classList.remove('visible'); }
+function showToast(msg, type) {
+  var t = document.getElementById('toast'); if (!t) return;
+  t.textContent = msg; t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+function today() { return new Date().toISOString().slice(0, 10); }
+</script>
+</body>
+</html>
