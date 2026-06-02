@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cl.montemaradm.meterscan",
+      "sha256_cert_fingerprints": [
+        "17:EE:3B:86:59:D4:09:ED:7E:B4:5A:88:A5:3E:81:48:87:75:72:A2:01:51:80:AB:28:79:8D:10:80:44:E9:84"
+      ]
+    }
+  }
+]
